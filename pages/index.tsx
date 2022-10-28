@@ -77,7 +77,7 @@ export default function Home() {
         </button>
       </header>
       <div className="flex h-full pb-4">
-        <ul className="flex-grow overflow-auto">
+        <ul className="flex-grow overflow-auto pb-8">
           {isSuccess &&
             data.pages
               ?.flat()
@@ -124,8 +124,8 @@ export default function Home() {
           data.pages
             .flat()
             .filter(({ id }) => id == selected)
-            .map(({ title, body }) => (
-              <div className="p-2 rounded border-2 m-4 mb-10 w-1/2">
+            .map(({ title, body, id }) => (
+              <div className="p-2 rounded border-2 m-4 mb-10 w-1/2" key={id}>
                 <h1 className="font-bold capitalize mb-4">{title}</h1>
                 <p>{body}</p>
               </div>
