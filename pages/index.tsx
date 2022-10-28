@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useInfiniteQuery } from "react-query";
+import { useInfiniteQuery, useMutation } from "react-query";
 import { fetchPosts, postType } from "utils/apiUtils";
 import styles from "../styles/Home.module.css";
 
@@ -30,6 +30,13 @@ export default function Home() {
     },
     [fetchNextPage, hasNextPage]
   );
+
+  const delMutaion = useMutation((id) =>
+    fetch(``, {
+      method: "DELETE",
+    })
+  );
+
   useEffect(() => {
     const element = observerElem.current;
     if (!element) return;
@@ -39,6 +46,15 @@ export default function Home() {
     console.log({ data });
     return () => observer.unobserve(element);
   }, [fetchNextPage, hasNextPage, handleObserver]);
+
+  function deletePost(id: number) {
+    // write Delete mutaion
+    alert("Todo: Delete " + id);
+    console.log("delete", id);
+  }
+  function edit(id: number) {
+    alert("Todo: Edit post " + id);
+  }
 
   return (
     <div className="container m-auto p-6 h-screen overflow-hidden">
@@ -73,10 +89,27 @@ export default function Home() {
               .map(({ id, title }) => (
                 <li
                   key={id}
-                  className="px-4 py-2 my-4 cursor-pointer border-2 rounded capitalize hover:bg-slate-300"
+                  className="px-4 py-2 my-4 cursor-pointer border-2 rounded capitalize hover:bg-slate-300 flex"
                   onClick={() => setSelected(id)}
                 >
                   {title}
+                  <span className="flex-grow"></span>
+                  <button
+                    className="m-2"
+                    onClick={() => {
+                      edit(id);
+                    }}
+                  >
+                    🖋
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deletePost(id);
+                    }}
+                  >
+                    🚮
+                  </button>
                 </li>
               ))}
 
@@ -92,7 +125,7 @@ export default function Home() {
             .flat()
             .filter(({ id }) => id == selected)
             .map(({ title, body }) => (
-              <div className="p-2 rounded border-2 m-4 w-1/2">
+              <div className="p-2 rounded border-2 m-4 mb-10 w-1/2">
                 <h1 className="font-bold capitalize mb-4">{title}</h1>
                 <p>{body}</p>
               </div>
