@@ -1,14 +1,15 @@
-import Head from "next/head";
-import Image from "next/image";
+import Post from "components/post";
+import PostItem from "components/postItem";
+import Link from "next/link";
+import { useRouter } from "next/router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useInfiniteQuery, useMutation } from "react-query";
+import { useInfiniteQuery } from "react-query";
 import { fetchPosts, postType } from "utils/apiUtils";
-import styles from "../styles/Home.module.css";
 
 export default function Home() {
   const { data, isSuccess, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useInfiniteQuery<postType[]>(
-      "repos",
+      "posts",
       ({ pageParam = 1 }) => fetchPosts(pageParam),
       {
         getNextPageParam: (lastPage, allPages) => {
@@ -19,7 +20,8 @@ export default function Home() {
     );
   const [filterBy, setFilterBy] = useState("");
   const [sortPosts, setSort] = useState(false);
-  const [selected, setSelected] = useState(-1);
+  const router = useRouter();
+  const selected = parseInt((router.query.postId as string) || "");
   const observerElem = useRef(null);
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
@@ -29,12 +31,6 @@ export default function Home() {
       }
     },
     [fetchNextPage, hasNextPage]
-  );
-
-  const delMutaion = useMutation((id) =>
-    fetch(``, {
-      method: "DELETE",
-    })
   );
 
   useEffect(() => {
@@ -47,19 +43,10 @@ export default function Home() {
     return () => observer.unobserve(element);
   }, [fetchNextPage, hasNextPage, handleObserver]);
 
-  function deletePost(id: number) {
-    // write Delete mutaion
-    alert("Todo: Delete " + id);
-    console.log("delete", id);
-  }
-  function edit(id: number) {
-    alert("Todo: Edit post " + id);
-  }
-
   return (
-    <div className="container m-auto p-6 h-screen overflow-hidden">
-      <header className="mb-6 flex justify-between">
-        <h1 className="font-bold">My Blogs</h1>
+    <div className="container m-auto p-6 pb-0 h-screen overflow-hidden flex flex-col">
+      <header className="mb-6 flex justify-between items-center">
+        <h1 className="font-bold hidden md:block">My Blogs</h1>
         <input
           type="text"
           placeholder="Search"
@@ -68,7 +55,7 @@ export default function Home() {
           value={filterBy}
         />
         <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded"
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-6 ml-4 rounded"
           onClick={() => {
             setSort(!sortPosts);
           }}
@@ -76,8 +63,13 @@ export default function Home() {
           Sort
         </button>
       </header>
-      <div className="flex h-full pb-4">
-        <ul className="flex-grow overflow-auto pb-8">
+      <div className="flex overflow-hidden flex-grow">
+        <ul
+          className={
+            "flex-grow overflow-auto pr-4 md:block " +
+            (selected > -1 ? "hidden" : "")
+          }
+        >
           {isSuccess &&
             data.pages
               ?.flat()
@@ -86,32 +78,7 @@ export default function Home() {
                 // || body.includes(filterBy)
               )
               .sort((a, b) => (sortPosts ? a.title.localeCompare(b.title) : 0))
-              .map(({ id, title }) => (
-                <li
-                  key={id}
-                  className="px-4 py-2 my-4 cursor-pointer border-2 rounded capitalize hover:bg-slate-300 flex"
-                  onClick={() => setSelected(id)}
-                >
-                  {title}
-                  <span className="flex-grow"></span>
-                  <button
-                    className="m-2"
-                    onClick={() => {
-                      edit(id);
-                    }}
-                  >
-                    🖋
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deletePost(id);
-                    }}
-                  >
-                    🚮
-                  </button>
-                </li>
-              ))}
+              .map((post) => <PostItem key={post.id} {...post} />)}
 
           <div className="loader" ref={observerElem}>
             {isFetchingNextPage && hasNextPage
@@ -119,18 +86,19 @@ export default function Home() {
               : "No search left"}
           </div>
         </ul>
-        {selected > -1 &&
-          isSuccess &&
-          data.pages
-            .flat()
-            .filter(({ id }) => id == selected)
-            .map(({ title, body, id }) => (
-              <div className="p-2 rounded border-2 m-4 mb-10 w-1/2" key={id}>
-                <h1 className="font-bold capitalize mb-4">{title}</h1>
-                <p>{body}</p>
-              </div>
-            ))}
+        {selected > -1 && <Post postId={selected} />}
       </div>
+      <footer className="flex justify-center p-4 border-t mt-1">
+        Created with 💖 by
+        <a
+          href="http://mayank-chaudhari.vercel.app"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ml-1 underline"
+        >
+          Mayank
+        </a>
+      </footer>
     </div>
   );
 }
