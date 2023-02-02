@@ -1,10 +1,10 @@
 import Post from "components/post";
 import PostItem from "components/postItem";
-import Link from "next/link";
 import { useRouter } from "next/router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { useInfiniteQuery } from "react-query";
 import { fetchPosts, postType } from "utils/apiUtils";
+import { StickySectionHeader } from "@mayank1513/sticky-section-header";
 
 export default function Home() {
   const { data, isSuccess, hasNextPage, fetchNextPage, isFetchingNextPage } =
@@ -22,26 +22,14 @@ export default function Home() {
   const [sortPosts, setSort] = useState(false);
   const router = useRouter();
   const selected = parseInt((router.query.postId as string) || "");
-  const observerElem = useRef(null);
-  const handleObserver = useCallback(
-    (entries: IntersectionObserverEntry[]) => {
-      const [target] = entries;
-      if (target.isIntersecting && hasNextPage) {
+  const loadMore = useCallback(
+    (entry: IntersectionObserverEntry) => {
+      if (entry.isIntersecting && hasNextPage) {
         fetchNextPage();
       }
     },
     [fetchNextPage, hasNextPage]
   );
-
-  useEffect(() => {
-    const element = observerElem.current;
-    if (!element) return;
-    const option = { threshold: 0 };
-    const observer = new IntersectionObserver(handleObserver, option);
-    observer.observe(element);
-    console.log({ data });
-    return () => observer.unobserve(element);
-  }, [fetchNextPage, hasNextPage, handleObserver]);
 
   return (
     <div className="container m-auto p-6 pb-0 h-screen overflow-hidden flex flex-col">
@@ -80,11 +68,16 @@ export default function Home() {
               .sort((a, b) => (sortPosts ? a.title.localeCompare(b.title) : 0))
               .map((post) => <PostItem key={post.id} {...post} />)}
 
-          <div className="loader" ref={observerElem}>
+          <StickySectionHeader
+            tag="div"
+            stick={false}
+            callBack={loadMore}
+            className="loader"
+          >
             {isFetchingNextPage && hasNextPage
               ? "Loading..."
               : "No search left"}
-          </div>
+          </StickySectionHeader>
         </ul>
         {selected > -1 && <Post postId={selected} />}
       </div>

@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@mayank1513/sticky-section-header": "^0.0.10",
     "next": "13.0.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
